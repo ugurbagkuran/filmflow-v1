@@ -6,11 +6,11 @@ from bson import ObjectId
 from bson.errors import InvalidId
 
 from app.core.database import get_database
+from app.services.auth.utils import get_current_admin_user, get_current_active_user  # DÜZELTİLDİ
 from .schemas import MovieCreate, MovieDB, MovieUpdate 
 
 router = APIRouter()
 
-# DÜZELTME: Veritabanı adını tekrar verilerin olduğu yere, "imdb_clone"a çektik.
 
 # --- GET (Listeleme ve Arama) ---
 @router.get("/", response_description="Filmleri listele ve filtrele", response_model=List[MovieDB])
@@ -34,24 +34,23 @@ async def list_movies(
     if genre:
         search_query["genre"] = genre
 
-    # BURASI DÜZELDİ: imdb_clone
     movies_cursor = db["movies"].find(search_query).skip(skip).limit(limit)
     movies = await movies_cursor.to_list(length=limit)
     return movies
 
-# --- POST (Oluşturma) ---
+
+# --- POST (Oluşturma) - Sadece Admin ---
 @router.post("/", response_description="Yeni film ekle", response_model=MovieDB, status_code=status.HTTP_201_CREATED)
 async def create_movie(
     movie: MovieCreate = Body(...), 
-    db: AsyncIOMotorClient = Depends(get_database)
+    db: AsyncIOMotorClient = Depends(get_database),
+    admin: dict = Depends(get_current_admin_user)  # DÜZELTİLDİ
 ):
     movie_data = jsonable_encoder(movie)
-    # BURASI DÜZELDİ: imdb_clone
     new_movie = await db["movies"].insert_one(movie_data)
-    
-    # BURASI DÜZELDİ: imdb_clone
     created_movie = await db["movies"].find_one({"_id": new_movie.inserted_id})
     return created_movie
+
 
 # --- GET (Tekil Detay) ---
 @router.get("/{id}", response_description="Tek bir filmi getir", response_model=MovieDB)
@@ -61,18 +60,19 @@ async def show_movie(id: str, db: AsyncIOMotorClient = Depends(get_database)):
     except InvalidId:
         raise HTTPException(status_code=404, detail="Geçersiz ID formatı.")
 
-    # BURASI DÜZELDİ: imdb_clone
     if (movie := await db["movies"].find_one({"_id": oid})) is not None:
         return movie
     
     raise HTTPException(status_code=404, detail=f"{id} ID'li film bulunamadı.")
 
-# --- PUT (Güncelleme) ---
+
+# --- PUT (Güncelleme) - Sadece Admin ---
 @router.put("/{id}", response_description="Filmi güncelle", response_model=MovieDB)
 async def update_movie(
     id: str, 
     movie: MovieUpdate = Body(...), 
-    db: AsyncIOMotorClient = Depends(get_database)
+    db: AsyncIOMotorClient = Depends(get_database),
+    admin: dict = Depends(get_current_admin_user)  # Admin kontrolü eklendi
 ):
     try:
         oid = ObjectId(id)
@@ -82,7 +82,6 @@ async def update_movie(
     movie_data = {k: v for k, v in movie.model_dump(exclude_unset=True).items()}
 
     if len(movie_data) >= 1:
-        # BURASI DÜZELDİ: imdb_clone
         update_result = await db["movies"].update_one(
             {"_id": oid}, {"$set": movie_data}
         )
@@ -90,21 +89,24 @@ async def update_movie(
             if (updated_movie := await db["movies"].find_one({"_id": oid})) is not None:
                 return updated_movie
 
-    # BURASI DÜZELDİ: imdb_clone
     if (existing_movie := await db["movies"].find_one({"_id": oid})) is not None:
         return existing_movie
 
     raise HTTPException(status_code=404, detail=f"{id} ID'li film bulunamadı.")
 
-# --- DELETE (Silme) ---
+
+# --- DELETE (Silme) - Sadece Admin ---
 @router.delete("/{id}", response_description="Filmi sil")
-async def delete_movie(id: str, db: AsyncIOMotorClient = Depends(get_database)):
+async def delete_movie(
+    id: str, 
+    db: AsyncIOMotorClient = Depends(get_database),
+    admin: dict = Depends(get_current_admin_user)  # Admin kontrolü eklendi
+):
     try:
         oid = ObjectId(id)
     except InvalidId:
         raise HTTPException(status_code=404, detail="Geçersiz ID formatı.")
         
-    # BURASI DÜZELDİ: imdb_clone
     delete_result = await db["movies"].delete_one({"_id": oid})
 
     if delete_result.deleted_count == 1:
