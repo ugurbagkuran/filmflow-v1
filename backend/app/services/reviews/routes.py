@@ -11,7 +11,7 @@ router = APIRouter()
 
 no_embedding_fields = {"embedding": 0}
  
-# --- Yardımcı Fonksiyon ---
+# --- Yardımcı Fonksiyonlar ---
 def is_valid_object_id(id_str: str) -> bool:
     """ObjectId formatını kontrol eder."""
     try:
@@ -19,6 +19,31 @@ def is_valid_object_id(id_str: str) -> bool:
         return True
     except:
         return False
+
+
+async def update_movie_average_rating(db, movie_id: str):
+    """
+    Bir filme ait tüm yorumların ortalama puanını hesaplar ve
+    movies koleksiyonundaki average_rating alanını günceller.
+    """
+    # Aggregation pipeline ile ortalama hesapla
+    pipeline = [
+        {"$match": {"movie_id": movie_id}},
+        {"$group": {"_id": None, "avg_rating": {"$avg": "$rating"}}}
+    ]
+    
+    result = await db.reviews.aggregate(pipeline).to_list(1)
+    
+    if result and result[0].get("avg_rating") is not None:
+        avg_rating = round(result[0]["avg_rating"], 1)
+    else:
+        avg_rating = 0.0
+    
+    # Movies koleksiyonunu güncelle
+    await db.movies.update_one(
+        {"_id": ObjectId(movie_id)},
+        {"$set": {"average_rating": avg_rating}}
+    )
 
 
 # --- CREATE ---
@@ -68,6 +93,9 @@ async def create_review(
     
     if not created_review:
         raise HTTPException(status_code=500, detail="Yorum oluşturulamadı.")
+    
+    # Filmin ortalama puanını güncelle
+    await update_movie_average_rating(db, movie_id)
     
     return ReviewResponse.model_validate(created_review)
 
@@ -140,6 +168,11 @@ async def update_review(
     )
     
     updated_review = await db.reviews.find_one({"_id": ObjectId(review_id)})
+    
+    # Eğer rating güncellendiyse, filmin ortalama puanını güncelle
+    if "rating" in update_data:
+        await update_movie_average_rating(db, existing_review["movie_id"])
+    
     return ReviewResponse.model_validate(updated_review)
 
 
@@ -177,5 +210,10 @@ async def delete_review(
             detail="Bu yorumu silme yetkiniz yok."
         )
     
+    movie_id = existing_review["movie_id"]
     await db.reviews.delete_one({"_id": ObjectId(review_id)})
+    
+    # Filmin ortalama puanını güncelle
+    await update_movie_average_rating(db, movie_id)
+    
     return None
