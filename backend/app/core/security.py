@@ -14,7 +14,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60  # 1 saat
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # OAuth2 şeması
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
 #kullanıcıdan girilen şifre ile veritabanındaki hashlenmiş şifreyi karşılaştırır
