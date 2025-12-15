@@ -12,20 +12,20 @@ PyObjectId = Annotated[str, BeforeValidator(str)]
 # Ortak alanlar burada. Kod tekrarını önler.
 class ReviewBase(BaseModel):
     rating: int = Field(..., ge=1, le=10, description="Puan 1 ile 10 arasında olmalı")
-    comment: str = Field(..., min_length=3, max_length=1000, description="Yorum metni")
+    comment: Optional[str] = Field(None, max_length=1000, description="Yorum metni (opsiyonel)")
 
 # --- OLUŞTURMA ŞEMASI (Create) ---
 # Kullanıcıdan (Frontend/Postman) gelen veri.
 # movie_id URL'den alınacak, user_id token'dan alınacak.
 class ReviewCreate(BaseModel):
     rating: int = Field(..., ge=1, le=10, description="Puan 1 ile 10 arasında olmalı")
-    comment: str = Field(..., min_length=3, max_length=1000, description="Yorum metni")
+    comment: Optional[str] = Field(None, max_length=1000, description="Yorum metni (opsiyonel)")
 
 # --- GÜNCELLEME ŞEMASI (Update) ---
 # Kullanıcı yorumunu düzenlerse sadece bu alanlar değişebilir.
 class ReviewUpdate(BaseModel):
     rating: Optional[int] = Field(None, ge=1, le=10)
-    comment: Optional[str] = Field(None, min_length=3, max_length=1000)
+    comment: Optional[str] = Field(None, max_length=1000)
 
 # --- VERİTABANI/YANIT ŞEMASI (Response/DB) ---
 # Veritabanından okuyup kullanıcıya gösterdiğimiz tam hali.
