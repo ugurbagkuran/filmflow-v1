@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import SearchBar from '../components/SearchBar';
+import AgentChatWidget from '../components/AgentChatWidget';
 
 const MainLayout = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false); // Desktop dropdown for "Menu"
@@ -69,8 +70,8 @@ const MainLayout = () => {
                                             <div className="fixed inset-0 z-10" onClick={() => setIsMenuOpen(false)}></div>
                                             <div className="absolute top-full left-0 mt-4 w-48 bg-surface border border-black/10 dark:border-white/10 rounded-xl shadow-2xl z-20 py-2 overflow-hidden flex flex-col ring-1 ring-black/5 dark:ring-white/5 animate-in fade-in zoom-in-95 duration-200">
                                                 <div className="px-5 py-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Categories</div>
-                                                <a href="/#new" className="px-5 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>New Releases</a>
-                                                <a href="/#top" className="px-5 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Top Rated</a>
+                                                <a href="/#new-releases" className="px-5 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>New Releases</a>
+
                                                 <Link to="/movies" className="px-5 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>All Movies</Link>
                                             </div>
                                         </>
@@ -196,8 +197,8 @@ const MainLayout = () => {
                                     Browse Categories
                                     {isMenuOpen && (
                                         <div className="ml-4 mt-2 flex flex-col gap-2 border-l border-white/10 pl-4">
-                                            <a href="/#new" className="text-base text-gray-400 hover:text-white py-1">New Releases</a>
-                                            <a href="/#top" className="text-base text-gray-400 hover:text-white py-1">Top Rated</a>
+                                            <a href="/#new-releases" className="text-base text-gray-400 hover:text-white py-1">New Releases</a>
+
                                         </div>
                                     )}
                                 </div>
@@ -244,6 +245,9 @@ const MainLayout = () => {
                     </p>
                 </div>
             </footer>
+
+            {/* AI Agent Chat Widget */}
+            <AgentChatWidget />
         </div>
     );
 };

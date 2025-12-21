@@ -9,19 +9,23 @@ const MoviesPage = () => {
     const [loading, setLoading] = useState(true);
     const [searchParams] = useSearchParams();
     const [page, setPage] = useState(1);
-    const limit = 12;
+    const limit = 30;
 
     const titleQuery = searchParams.get('title');
+    const genreQuery = searchParams.get('genre');
 
     useEffect(() => {
         const fetchMovies = async () => {
             setLoading(true);
             try {
                 const skip = (page - 1) * limit;
-                // Pass titleQuery if it exists
+                // Pass queries if they exist
                 const params = { limit, skip };
                 if (titleQuery) {
                     params.title = titleQuery;
+                }
+                if (genreQuery) {
+                    params.genre = genreQuery;
                 }
 
                 const data = await getMovies(params);
@@ -33,7 +37,7 @@ const MoviesPage = () => {
             }
         };
         fetchMovies();
-    }, [page, titleQuery]);
+    }, [page, titleQuery, genreQuery]);
 
     return (
         <div className="container mx-auto px-4 py-8">

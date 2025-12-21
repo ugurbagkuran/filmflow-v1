@@ -28,8 +28,8 @@ const HomePage = () => {
     const newReleases = movies.filter(m => m.year >= 2010).sort((a, b) => b.year - a.year).slice(0, 10);
     const classics = movies.filter(m => m.year < 2010).sort((a, b) => b.year - a.year).slice(0, 10);
 
-    // Fallback for trending if not enough data, just take first 10
-    const trending = movies.slice(0, 10);
+    // Trending movies: rating >= 7
+    const trending = movies.filter(m => m.average_rating >= 7).slice(0, 10);
 
     const MovieSection = ({ id, title, items, delayOffset = 0 }) => (
         <section id={id} className="container mx-auto px-4 mt-12 scroll-mt-24">
